@@ -113,6 +113,8 @@
     - access_ip is defined
     - not ignore_assert_errors
     - ping_access_ip
+    - not is_fedora_coreos
+    - not ansible_os_family in ["Flatcar", "Flatcar Container Linux by Kinvolk"]
 
 - name: Stop if access_ip is not pingable
   command: ping -c1 {{ access_ip }}
@@ -303,3 +305,11 @@
   when:
     - kube_external_ca_mode
     - not ignore_assert_errors
+
+- name: Stop if using deprecated comma separated list for admission plugins
+  assert:
+    that: "',' not in kube_apiserver_enable_admission_plugins[0]"
+    msg: "Comma-separated list for kube_apiserver_enable_admission_plugins is now deprecated, use separate list items for each plugin."
+  when:
+    - kube_apiserver_enable_admission_plugins is defined
+    - kube_apiserver_enable_admission_plugins | length > 0
